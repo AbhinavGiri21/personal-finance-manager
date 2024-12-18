@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./login.css";
 import img from '../Images/images.jpeg';
 import axios from "axios"; // Make sure axios is installed: npm install axios
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Login = () => {
     const [isSignUp, setIsSignUp] = useState(false);
@@ -9,6 +10,7 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
     const [message, setMessage] = useState("");
+    const navigate = useNavigate();  // Initialize navigate hook
 
     const toggleForm = () => {
         setIsSignUp(!isSignUp);
@@ -33,6 +35,9 @@ const Login = () => {
                 setMessage(response.data.message);
                 // Store the token in local storage for login
                 localStorage.setItem("token", response.data.token);
+
+                // Redirect to dashboard after successful login
+                navigate("/dashboard"); // Use navigate to redirect
             }
 
             // Reset form fields
@@ -44,8 +49,6 @@ const Login = () => {
             alert(error.response?.data?.message || "An error occurred");
         }
     };
-
-
 
     return (
         <div className="login-signup-container">
