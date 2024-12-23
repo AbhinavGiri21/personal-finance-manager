@@ -16,11 +16,9 @@ body {
     background-color: #fff;
     border-radius: 5%;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
 }
 
 .left-section {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -86,4 +84,11 @@ input {
 .submit-btn:hover,
 .toggle-btn:hover {
     background-color: #0056b3;
+}
+
+@media(max-width:600px) {
+    .login-signup-container {
+        display: flex;
+        flex-direction: column;
+    }
 }

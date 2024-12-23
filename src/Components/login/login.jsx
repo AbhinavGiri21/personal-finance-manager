@@ -27,26 +27,24 @@ const Login = () => {
                 : await axios.post("http://localhost:5000/api/login", payload);
 
             if (isSignUp) {
-                // Show alert on successful sign-up
                 alert("Account created successfully!");
-                // Toggle to the login form after alert
                 setIsSignUp(false);
             } else {
                 setMessage(response.data.message);
-                // Store the token in local storage for login
                 localStorage.setItem("token", response.data.token);
 
-                // Redirect to dashboard after successful login
-                navigate("/dashboard"); // Use navigate to redirect
+                navigate("/dashboard");
             }
 
-            // Reset form fields
             setEmail("");
             setPassword("");
             setUsername("");
 
         } catch (error) {
             alert(error.response?.data?.message || "An error occurred");
+            setEmail("");
+            setPassword("");
+            setUsername("");
         }
     };
 
