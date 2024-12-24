@@ -29,7 +29,6 @@ const Login = () => {
                 alert("Account created successfully!");
                 setIsSignUp(false);
             } else {
-                setMessage(response.data.message); // No error now
                 localStorage.setItem("token", response.data.token);
 
                 navigate("/dashboard");
