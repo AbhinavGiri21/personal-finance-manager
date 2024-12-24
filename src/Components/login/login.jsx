@@ -9,7 +9,6 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
-    const [message, setMessage] = useState(""); // Added state for message
     const navigate = useNavigate();
 
     const toggleForm = () => {
