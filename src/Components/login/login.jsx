@@ -99,7 +99,6 @@ const Login = () => {
                     <button onClick={toggleForm} className="toggle-btn">
                         {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
                     </button>
-                    {message && <p className="message">{message}</p>}
                 </div>
             </div>
         </div>
