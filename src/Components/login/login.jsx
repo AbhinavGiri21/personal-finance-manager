@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import "./login.css";
 import img from '../Images/images.jpeg';
-import axios from "axios"; // Make sure axios is installed: npm install axios
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const [isSignUp, setIsSignUp] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
-    const navigate = useNavigate();  // Initialize navigate hook
+    const [message, setMessage] = useState(""); // Added state for message
+    const navigate = useNavigate();
 
     const toggleForm = () => {
         setIsSignUp(!isSignUp);
@@ -29,7 +30,7 @@ const Login = () => {
                 alert("Account created successfully!");
                 setIsSignUp(false);
             } else {
-                setMessage(response.data.message);
+                setMessage(response.data.message); // No error now
                 localStorage.setItem("token", response.data.token);
 
                 navigate("/dashboard");
@@ -98,6 +99,7 @@ const Login = () => {
                     <button onClick={toggleForm} className="toggle-btn">
                         {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
                     </button>
+                    {message && <p className="message">{message}</p>}
                 </div>
             </div>
         </div>
