@@ -9,7 +9,6 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [username, setUsername] = useState("");
-    const [message, setMessage] = useState("");
     const navigate = useNavigate();  // Initialize navigate hook
 
     const toggleForm = () => {
@@ -51,7 +50,7 @@ const Login = () => {
     return (
         <div className="login-signup-container">
             <div className="left-section">
-                <img src={img} alt="image" className="login-image" />
+                <img src={img} alt="image-login" className="login-image" />
             </div>
             <div className="right-section">
                 <div className="form-wrapper">
