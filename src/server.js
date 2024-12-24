@@ -12,6 +12,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Ensure environment variables are set
+if (!process.env.JWT_SECRET_KEY || !process.env.MONGO_URI) {
+    console.error("Environment variables JWT_SECRET_KEY and MONGO_URI are required.");
+    process.exit(1); // Exit if essential variables are not set
+}
+
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -35,20 +41,21 @@ const User = mongoose.model("User", UserSchema);
 app.post("/api/signup", async (req, res) => {
     const { username, email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
+    try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, email, password: hashedPassword });
+        await newUser.save();
+
+        res.status(201).json({ message: "User created successfully" });
+    } catch (err) {
+        console.error("Signup error:", err);
+        res.status(500).json({ message: "An error occurred", error: err.message });
     }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new user
-    const newUser = new User({ username, email, password: hashedPassword });
-    await newUser.save();
-
-    res.status(201).json({ message: "User created successfully" });
 });
 
 // Login route
@@ -58,13 +65,11 @@ app.post("/api/login", async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            console.error(`Login failed: User not found for email ${email}`);
             return res.status(400).json({ message: "User not found" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            console.error(`Login failed: Invalid password for email ${email}`);
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
@@ -81,20 +86,40 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
+// Middleware for token verification
+const authenticateToken = (req, res, next) => {
+    const token = req.header('Authorization') && req.header('Authorization').split(' ')[1]; // Extract token
 
-
-// Protect route
-app.get("/api/protected", (req, res) => {
-    const token = req.headers["authorization"];
     if (!token) {
         return res.status(401).json({ message: "No token provided" });
     }
 
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: "Invalid or expired token" });
+        }
+
+        req.user = decoded;
+        next();
+    });
+};
+
+// Protected route example
+app.get("/api/protected", authenticateToken, (req, res) => {
+    res.status(200).json({ message: "Protected content", userId: req.user.userId });
+});
+
+// User info route
+app.get("/api/user", authenticateToken, async (req, res) => {
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-        res.status(200).json({ message: "Protected content", userId: decoded.userId });
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ username: user.username });
     } catch (err) {
-        res.status(401).json({ message: "Invalid or expired token" });
+        console.error("Error fetching user data:", err);
+        res.status(500).json({ message: "An error occurred", error: err.message });
     }
 });
 
