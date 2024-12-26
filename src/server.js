@@ -86,9 +86,8 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// Middleware for token verification
 const authenticateToken = (req, res, next) => {
-    const token = req.header('Authorization') && req.header('Authorization').split(' ')[1]; // Extract token
+    const token = req.header('Authorization') && req.header('Authorization').split(' ')[1];
 
     if (!token) {
         return res.status(401).json({ message: "No token provided" });
@@ -104,22 +103,21 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Protected route example
 app.get("/api/protected", authenticateToken, (req, res) => {
     res.status(200).json({ message: "Protected content", userId: req.user.userId });
 });
 
-// User info route
-app.get("/api/user", authenticateToken, async (req, res) => {
+app.get("/get-username", async (req, res) => {
+    const token = req.headers["authorization"];
+    if (!token) return res.status(401).json({ error: "No token provided!" });
+
     try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        res.status(200).json({ username: user.username });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+        const user = await User.findById(decoded.userId);
+        if (!user) return res.status(404).json({ error: "User not found!" });
+        res.json({ username: user.username });
     } catch (err) {
-        console.error("Error fetching user data:", err);
-        res.status(500).json({ message: "An error occurred", error: err.message });
+        res.status(500).json({ error: "Invalid token!" });
     }
 });
 
