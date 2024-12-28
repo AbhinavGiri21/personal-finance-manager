@@ -155,35 +155,73 @@ app.post("/upload-profile-pic", authenticateToken, upload.single("profilePic"), 
     }
 });
 
-app.put('/api/update-settings', async (req, res) => {
-    const { username, email, password, newPassword } = req.body;
-    const token = req.headers.authorization.split(" ")[1];
-
-    // Verify token and fetch user
-    const user = await verifyToken(token);
-    if (!user) return res.status(401).send({ message: 'Unauthorized' });
+// Routes for updating settings (username, email, password)
+app.put("/api/update-settings", authenticateToken, async (req, res) => {
+    const { username, email, password, newPassword, confirmPassword } = req.body;
+    const userId = req.user.userId;
 
     try {
-        if (username) user.username = username;
-        if (email) user.email = email;
-
-        // Update password only if both current and new password are provided
-        if (password && newPassword) {
-            const isPasswordCorrect = await bcrypt.compare(password, user.password);
-            if (!isPasswordCorrect) {
-                return res.status(400).send({ message: 'Current password is incorrect' });
-            }
-            user.password = await bcrypt.hash(newPassword, 10);
+        // Fetch user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
 
-        await user.save();
-        res.status(200).send({ message: 'Settings updated successfully' });
+        let isUpdated = false; // Flag to track if anything was updated
+
+        // Update username
+        if (username) {
+            user.username = username;
+            isUpdated = true;
+        }
+
+        // Update email
+        if (email) {
+            // Check if the email is already taken by another user
+            const existingEmailUser = await User.findOne({ email });
+            if (existingEmailUser && existingEmailUser._id.toString() !== userId.toString()) {
+                return res.status(400).json({ message: "Email is already taken" });
+            }
+            user.email = email;
+            isUpdated = true;
+        }
+
+        // Update password
+        if (password && newPassword) {
+            // Verify the current password
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: "Current password is incorrect" });
+            }
+
+            // Check if new password matches the confirmation
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({ message: "New password and confirm password do not match" });
+            }
+
+            // Hash new password
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+            user.password = hashedNewPassword;
+            isUpdated = true;
+        }
+
+        // If no updates were made, return early
+        if (!isUpdated) {
+            return res.status(400).json({ message: "No valid changes to update" });
+        }
+
+        // Save the updated user data
+        const result = await user.save();
+        if (!result) {
+            return res.status(400).json({ message: "Failed to update user" });
+        }
+
+        res.status(200).json({ message: "User settings updated successfully" });
     } catch (err) {
-        res.status(500).send({ message: 'Failed to update settings' });
+        console.error("Error updating settings:", err);
+        res.status(500).json({ message: "An error occurred while updating settings", error: err.message });
     }
 });
-
-
 // Serve static files
 app.use("/uploads", express.static("uploads"));
 

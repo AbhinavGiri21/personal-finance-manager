@@ -1,59 +1,48 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './settings.css';
 
 const Settings = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState(''); // Current password
+    const [password, setPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
     const handleUpdateUsername = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-
-            const response = await fetch('/api/update-settings', {
-                method: 'PUT',
+            const token = localStorage.getItem('token'); // Make sure the token key is correct
+            const response = await axios.put('http://localhost:5000/api/update-settings', { username }, {
                 headers: {
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ username }),
             });
 
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message);
-            } else {
-                alert(data.message || "An error occurred");
-            }
+            alert(response.data.message);
+            // Reload the page after successful update
+            window.location.reload();
         } catch (err) {
-            console.error("Error updating username:", err);
+            console.error("Error updating username:", err.response ? err.response.data : err);
             alert("An error occurred while updating username");
         }
     };
 
     const handleUpdateEmail = async () => {
         try {
-            const token = localStorage.getItem('authToken');
-
-            const response = await fetch('/api/update-settings', {
-                method: 'PUT',
+            const token = localStorage.getItem('token'); // Make sure the token key is correct
+            const response = await axios.put('http://localhost:5000/api/update-settings', { email }, {
                 headers: {
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ email }),
             });
 
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message);
-            } else {
-                alert(data.message || "An error occurred");
-            }
+            alert(response.data.message);
+            // Reload the page after successful update
+            window.location.reload();
         } catch (err) {
-            console.error("Error updating email:", err);
+            console.error("Error updating email:", err.response ? err.response.data : err);
             alert("An error occurred while updating email");
         }
     };
@@ -70,25 +59,19 @@ const Settings = () => {
         }
 
         try {
-            const token = localStorage.getItem('authToken');
-
-            const response = await fetch('/api/update-settings', {
-                method: 'PUT',
+            const token = localStorage.getItem('token'); // Make sure the token key is correct
+            const response = await axios.put('http://localhost:5000/api/update-settings', { password, newPassword, confirmPassword }, {
                 headers: {
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ password, newPassword }),
             });
 
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message);
-            } else {
-                alert(data.message || "An error occurred");
-            }
+            alert(response.data.message);
+            // Reload the page after successful update
+            window.location.reload();
         } catch (err) {
-            console.error("Error updating password:", err);
+            console.error("Error updating password:", err.response ? err.response.data : err);
             alert("An error occurred while updating password");
         }
     };
@@ -97,9 +80,7 @@ const Settings = () => {
         <div className='settings-container'>
             <h1>Settings</h1>
             <form className="settings-form" onSubmit={(e) => e.preventDefault()}>
-                {/* Row for Username and Email */}
                 <div className="row-group">
-                    {/* Username Update Section */}
                     <div className="settings-item">
                         <label htmlFor="username">Username:</label>
                         <div className="input-button-group">
@@ -114,7 +95,6 @@ const Settings = () => {
                         </div>
                     </div>
 
-                    {/* Email Update Section */}
                     <div className="settings-item">
                         <label htmlFor="email">Email:</label>
                         <div className="input-button-group">
@@ -130,7 +110,6 @@ const Settings = () => {
                     </div>
                 </div>
 
-                {/* Password Update Section */}
                 <div className="settings-item">
                     <label htmlFor="password">Current Password:</label>
                     <input
@@ -167,7 +146,6 @@ const Settings = () => {
                     </div>
                 </div>
             </form>
-
         </div>
     );
 };

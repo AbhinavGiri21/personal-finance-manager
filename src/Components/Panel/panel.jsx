@@ -118,7 +118,7 @@ const Panel = () => {
                 </div>
                 <ul className="nav-item">
                     <li>
-                        <Link to="/dashboard">Home</Link>
+                        <Link to="/home">Home</Link>
                     </li>
                     <li>
                         <Link to="/profile">Profile</Link>

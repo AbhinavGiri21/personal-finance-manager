@@ -56,3 +56,39 @@
 .settings-form button:hover {
     background-color: #0080af;
 }
+
+@media (max-width: 720px) {
+    .settings-container {
+        padding: 10px;
+        max-width: 100%;
+    }
+
+    .settings-form {
+        margin-top: 20px;
+    }
+
+    .row-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .settings-item {
+        width: 100%;
+    }
+
+    .input-button-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings-form input {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .settings-form button {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 15px;
+    }
+}
