@@ -56,6 +56,26 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", UserSchema);
 
+// Expense model
+const ExpenseSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    balance: { type: Number, default: 0 },
+    shopping: { type: Number, default: 0 },
+    food: { type: Number, default: 0 },
+    entertainment: { type: Number, default: 0 },
+});
+const Expense = mongoose.model("Expense", ExpenseSchema);
+
+// Transaction model
+const TransactionSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    purpose: { type: String, required: true },
+    sum: { type: Number, required: true },
+    category: { type: String, required: true },
+    date: { type: Date, required: true },
+});
+const Transaction = mongoose.model("Transaction", TransactionSchema);
+
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
     const token = req.header("Authorization")?.split(" ")[1];
@@ -130,100 +150,6 @@ app.get("/get-username", authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Invalid token!" });
     }
 });
-
-app.post("/upload-profile-pic", authenticateToken, upload.single("profilePic"), async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded" });
-        }
-
-        const filePath = req.file.path;
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        user.profilePic = filePath; // Save file path
-        await user.save();
-
-        res.status(200).json({ message: "Profile picture uploaded successfully", filePath });
-    } catch (err) {
-        console.error("Error uploading profile picture:", err);
-        res.status(500).json({ message: "Error uploading profile picture", error: err.message });
-    }
-});
-
-// Routes for updating settings (username, email, password)
-app.put("/api/update-settings", authenticateToken, async (req, res) => {
-    const { username, email, password, newPassword, confirmPassword } = req.body;
-    const userId = req.user.userId;
-
-    try {
-        // Fetch user by ID
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        let isUpdated = false; // Flag to track if anything was updated
-
-        // Update username
-        if (username) {
-            user.username = username;
-            isUpdated = true;
-        }
-
-        // Update email
-        if (email) {
-            // Check if the email is already taken by another user
-            const existingEmailUser = await User.findOne({ email });
-            if (existingEmailUser && existingEmailUser._id.toString() !== userId.toString()) {
-                return res.status(400).json({ message: "Email is already taken" });
-            }
-            user.email = email;
-            isUpdated = true;
-        }
-
-        // Update password
-        if (password && newPassword) {
-            // Verify the current password
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(400).json({ message: "Current password is incorrect" });
-            }
-
-            // Check if new password matches the confirmation
-            if (newPassword !== confirmPassword) {
-                return res.status(400).json({ message: "New password and confirm password do not match" });
-            }
-
-            // Hash new password
-            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-            user.password = hashedNewPassword;
-            isUpdated = true;
-        }
-
-        // If no updates were made, return early
-        if (!isUpdated) {
-            return res.status(400).json({ message: "No valid changes to update" });
-        }
-
-        // Save the updated user data
-        const result = await user.save();
-        if (!result) {
-            return res.status(400).json({ message: "Failed to update user" });
-        }
-
-        res.status(200).json({ message: "User settings updated successfully" });
-    } catch (err) {
-        console.error("Error updating settings:", err);
-        res.status(500).json({ message: "An error occurred while updating settings", error: err.message });
-    }
-});
-// Serve static files
-app.use("/uploads", express.static("uploads"));
 
 // Server
 const PORT = process.env.PORT || 5000;
