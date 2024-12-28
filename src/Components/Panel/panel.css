@@ -1,11 +1,12 @@
 .panel-container {
     display: flex;
     height: 100vh;
-    width: 100vw;
-    position: relative;
-    z-index: 1000;
-    background-color: #f4f4f4;
-    overflow: hidden;
+}
+
+.content-details {
+    width: 100%;
+    margin-left: 250px;
+    transition: margin-left 0.3s ease-in-out;
 }
 
 .sidebar {
@@ -15,14 +16,24 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: center;
-    position: relative;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100%;
+    transition: left 0.3s ease-in-out;
+    z-index: 10;
+}
+
+.sidebar.open {
+    left: 0;
 }
 
 .profile-section {
     text-align: center;
-    margin-top: 100px;
+    margin-top: 5rem;
+    margin-bottom: 20px;
 }
 
 .profile-pic {
@@ -32,11 +43,6 @@
     object-fit: cover;
     margin-bottom: 10px;
     cursor: pointer;
-    border: 2px solid #3498db;
-}
-
-.profile-pic:hover {
-    box-shadow: 0 4px 10px rgba(52, 152, 219, 0.5);
 }
 
 .placeholder-pic {
@@ -51,18 +57,12 @@
     color: white;
     font-weight: bold;
     cursor: pointer;
-    font-size: 14px;
 }
 
-.placeholder-pic:hover {
-    background-color: #95a5a6;
-}
-
-.username {
+.sidebar .username {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 20px;
-    margin-top: 10px;
     text-align: center;
 }
 
@@ -70,7 +70,6 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -79,120 +78,65 @@
 }
 
 .nav-item li {
-    width: 100%;
-    margin: 10px 0;
-    padding: 10px 0;
+    margin: 15px 0;
     cursor: pointer;
     color: #ecf0f1;
-    transition: background-color 0.3s, color 0.3s;
+    transition: color 0.3s;
     text-align: center;
+    list-style: none;
 }
 
 .nav-item li:hover {
-    background-color: #34495e;
     color: #3498db;
 }
 
 .nav-item li a {
     text-decoration: none;
     color: inherit;
-    width: 100%;
     display: block;
 }
 
-.content-details {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.modal-overlay {
+.hamburger-menu {
+    display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 400px;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.file-input {
-    margin-bottom: 20px;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-}
-
-.upload-btn {
-    padding: 10px 20px;
-    background-color: #009ad0;
-    color: white;
-    border: none;
+    top: 20px;
+    left: 20px;
+    z-index: 20;
     cursor: pointer;
-    border-radius: 5px;
-    transition: background-color 0.3s;
 }
 
-.upload-btn:hover {
-    background-color: #017ca8;
-}
-
-.upload-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: red;
-    border: none;
-    font-size: 24px;
+.hamburger-menu svg {
     color: white;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background-color 0.3s;
 }
 
-.close-btn:hover {
-    background-color: #cc0000;
+@media (max-width: 768px) {
+    .hamburger-menu {
+        display: block;
+    }
+
+    .content-details {
+        margin-left: 0;
+    }
+
+    .sidebar {
+        left: -300px;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
 }
 
-button {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    display: inline-block;
-    transition: background-color 0.3s;
-}
+@media (min-width: 768px) {
+    .hamburger-menu {
+        display: none;
+    }
 
-button:hover {
-    background-color: #2980b9;
+    .content-details {
+        margin-left: 250px;
+    }
+
+    .sidebar {
+        left: 0;
+    }
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "./panel.css";
 import axios from "axios";
-import { Link, Outlet, useNavigate } from 'react-router-dom';  // Use Outlet to render page-specific content
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { FaBars, FaTimes } from 'react-icons/fa'; // Import the hamburger and close icons
 
 const Panel = () => {
     const navigate = useNavigate();
@@ -10,6 +11,7 @@ const Panel = () => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false); // State to control sidebar visibility
 
     const fetchUserDetails = async () => {
         try {
@@ -96,9 +98,23 @@ const Panel = () => {
         fetchUserDetails();
     }, []);
 
+    const toggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
+
     return (
         <div className="panel-container">
-            <div className="sidebar">
+            {/* Hamburger Menu (visible on mobile) */}
+            <div className="hamburger-menu" onClick={toggleSidebar}>
+                {sidebarOpen ? (
+                    <FaTimes size={30} style={{ color: '#fff' }} onClick={toggleSidebar} />
+                ) : (
+                    <FaBars size={30} style={{ color: '#2c3e50' }} onClick={toggleSidebar} />
+                )}
+            </div>
+
+            {/* Sidebar */}
+            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
                 <div className="profile-section">
                     {profilePic ? (
                         <img
@@ -131,7 +147,7 @@ const Panel = () => {
             </div>
 
             <div className="content-details">
-                <Outlet /> {/* This will render Dashboard, Profile, or Settings based on the route */}
+                <Outlet />
             </div>
 
             {showModal && (
