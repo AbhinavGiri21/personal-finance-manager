@@ -98,7 +98,6 @@ const Panel = () => {
 
     return (
         <div className="panel-container">
-            {/* Sidebar */}
             <div className="sidebar">
                 <div className="profile-section">
                     {profilePic ? (
@@ -131,12 +130,10 @@ const Panel = () => {
                 </ul>
             </div>
 
-            {/* Main content where the page-specific content will be rendered */}
-            <div className="content">
+            <div className="content-details">
                 <Outlet /> {/* This will render Dashboard, Profile, or Settings based on the route */}
             </div>
 
-            {/* Modal for updating profile picture */}
             {showModal && (
                 <div className="modal-overlay" onClick={closeModal}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>

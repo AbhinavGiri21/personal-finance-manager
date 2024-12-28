@@ -155,6 +155,35 @@ app.post("/upload-profile-pic", authenticateToken, upload.single("profilePic"), 
     }
 });
 
+app.put('/api/update-settings', async (req, res) => {
+    const { username, email, password, newPassword } = req.body;
+    const token = req.headers.authorization.split(" ")[1];
+
+    // Verify token and fetch user
+    const user = await verifyToken(token);
+    if (!user) return res.status(401).send({ message: 'Unauthorized' });
+
+    try {
+        if (username) user.username = username;
+        if (email) user.email = email;
+
+        // Update password only if both current and new password are provided
+        if (password && newPassword) {
+            const isPasswordCorrect = await bcrypt.compare(password, user.password);
+            if (!isPasswordCorrect) {
+                return res.status(400).send({ message: 'Current password is incorrect' });
+            }
+            user.password = await bcrypt.hash(newPassword, 10);
+        }
+
+        await user.save();
+        res.status(200).send({ message: 'Settings updated successfully' });
+    } catch (err) {
+        res.status(500).send({ message: 'Failed to update settings' });
+    }
+});
+
+
 // Serve static files
 app.use("/uploads", express.static("uploads"));
 
