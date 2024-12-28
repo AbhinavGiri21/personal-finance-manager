@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./panel.css";
 import axios from "axios";
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { FaBars, FaTimes } from 'react-icons/fa'; // Import the hamburger and close icons
 
 const Panel = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // Hook to get current location
     const [username, setUsername] = useState("");
     const [profilePic, setProfilePic] = useState("");
     const [file, setFile] = useState(null);
@@ -97,6 +98,11 @@ const Panel = () => {
     useEffect(() => {
         fetchUserDetails();
     }, []);
+
+    useEffect(() => {
+        // Close sidebar when navigating to a new route
+        setSidebarOpen(false);
+    }, [location]); // Re-run this whenever the location (route) changes
 
     const toggleSidebar = () => {
         setSidebarOpen(!sidebarOpen);
