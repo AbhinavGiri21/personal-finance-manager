@@ -1,125 +1,128 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import "./home.css";
 
-const Dashboard = () => {
-    const [expenses, setExpenses] = useState({
-        balance: 0,
-        shopping: 0,
-        foodAndDrinks: 0,
-        billsAndUtilities: 0,
-        others: 0,
+const Home = () => {
+    const [userData, setUserData] = useState({
+        amountRemaining: 0,
+        amountShopping: 0,
+        amountFD: 0,
+        amountBills: 0,
+        amountOther: 0,
+        transactions: [],
     });
 
-    const [transactions, setTransactions] = useState([]); // State for recent transactions
-    const [formData, setFormData] = useState({
-        purpose: "",
-        sum: "",
-        date: "",
-        category: "shopping",
-    });
-    const [addMoney, setAddMoney] = useState("");
-
-    const fetchData = async () => {
-        // Simulated API fetch logic (set to 0 for default)
-        setExpenses({
-            balance: 0,
-            shopping: 0,
-            foodAndDrinks: 0,
-            billsAndUtilities: 0,
-            others: 0,
-        });
-        setTransactions([]);
-    };
 
     useEffect(() => {
-        fetchData();
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const response = await axios.get("http://localhost:5000/api/user-data", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setUserData(response.data);
+            } catch (err) {
+                console.error("Error fetching user data:", err);
+            }
+        };
+
+        fetchUserData();
     }, []);
 
-    // Add money to the balance
-    const handleAddMoney = (e) => {
+    const handleAddMoney = async (e) => {
         e.preventDefault();
-        const amount = parseFloat(addMoney);
+        const amount = parseFloat(e.target.elements[0].value); // Parse to a number
+
         if (isNaN(amount) || amount <= 0) {
-            alert("Please enter a valid amount!");
+            alert("Please enter a valid amount.");
             return;
         }
-        setExpenses((prevState) => ({
-            ...prevState,
-            balance: prevState.balance + amount,
-        }));
-        setAddMoney(""); // Clear the input field
+
+        try {
+            const response = await fetch("http://localhost:5000/api/add-money", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ amount }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(`New balance: ₹${data.amountRemaining}`);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred while adding money.");
+        }
     };
 
-    // Add expenditure and update the balance
-    const handleAddExpenditure = (e) => {
+    const handleAddExpenditure = async (e) => {
         e.preventDefault();
-        const { purpose, sum, category, date } = formData;
-        const expenseAmount = parseFloat(sum);
+        const purpose = e.target.elements[0].value;
+        const sum = parseFloat(e.target.elements[1].value); // Parse to a number
+        const date = e.target.elements[2].value;
+        const category = e.target.elements["category"].value;
 
-        if (isNaN(expenseAmount) || expenseAmount <= 0 || !purpose || !date) {
-            alert("Please fill in all fields with valid data!");
+        if (isNaN(sum) || sum <= 0) {
+            alert("Please enter a valid expenditure amount.");
             return;
         }
 
-        if (expenseAmount > expenses.balance) {
-            alert("Insufficient balance!");
-            return;
+        try {
+            const response = await fetch("http://localhost:5000/api/add-expenditure", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ purpose, sum, date, category }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(`Remaining balance: ₹${data.amountRemaining}`);
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred while adding expenditure.");
         }
-
-        // Update balance and category
-        setExpenses((prevState) => ({
-            ...prevState,
-            balance: prevState.balance - expenseAmount,
-            [category]: prevState[category] + expenseAmount,
-        }));
-
-        // Add transaction
-        setTransactions((prevTransactions) => [
-            {
-                purpose,
-                category,
-                sum: -expenseAmount,
-                date,
-            },
-            ...prevTransactions,
-        ]);
-
-        // Clear the form
-        setFormData({
-            purpose: "",
-            sum: "",
-            date: "",
-            category: "shopping",
-        });
     };
 
     return (
         <div className="content">
-            {/* Expense Summary Cards */}
             <div className="card green balance">
                 <h3>Balance</h3>
-                <p>₹{expenses.balance}</p>
+                <p>₹{userData.amountRemaining}</p>
             </div>
             <div className="card blue">
                 <h3>Shopping</h3>
-                <p>₹{expenses.shopping}</p>
+                <p>₹{userData.amountShopping}</p>
             </div>
             <div className="card yellow">
                 <h3>Food and Drinks</h3>
-                <p>₹{expenses.foodAndDrinks}</p>
+                <p>₹{userData.amountFD}</p>
             </div>
             <div className="card red">
                 <h3>Bills & Utilities</h3>
-                <p>₹{expenses.billsAndUtilities}</p>
+                <p>₹{userData.amountBills}</p>
             </div>
             <div className="card black">
                 <h3>Others</h3>
-                <p>₹{expenses.others}</p>
+                <p>₹{userData.amountOther}</p>
             </div>
-            {/* Recent Transactions Table */}
-            <div className="transaction-details">
-                <h2>Recent Transactions</h2>
-                <table className="transactions-table">
+            <div className="transaction-table">
+                <h2>Transaction History</h2>
+                <table>
                     <thead>
                         <tr>
                             <th>Purpose</th>
@@ -129,17 +132,22 @@ const Dashboard = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {transactions.length > 0 ? (
-                            transactions.map((transaction, index) => (
-                                <tr key={index}>
-                                    <td>{transaction.purpose}</td>
-                                    <td>{transaction.category}</td>
-                                    <td className={transaction.sum > 0 ? "positive" : "negative"}>
-                                        ₹{transaction.sum}
-                                    </td>
-                                    <td>{new Date(transaction.date).toLocaleDateString()}</td>
-                                </tr>
-                            ))
+                        {userData.transactions && userData.transactions.length > 0 ? (
+                            userData.transactions
+                                .sort((a, b) => {
+                                    const dateA = new Date(a.date);
+                                    const dateB = new Date(b.date);
+                                    // First, compare the dates. If they are the same, compare the time.
+                                    return dateB - dateA; // Sort by date in descending order
+                                })
+                                .map((transaction, index) => (
+                                    <tr key={index}>
+                                        <td>{transaction.purpose}</td>
+                                        <td>{transaction.category}</td>
+                                        <td>₹{transaction.sum}</td>
+                                        <td>{new Date(transaction.date).toLocaleString()}</td> {/* Shows both date and time */}
+                                    </tr>
+                                ))
                         ) : (
                             <tr>
                                 <td colSpan="4">No transactions available</td>
@@ -148,108 +156,49 @@ const Dashboard = () => {
                     </tbody>
                 </table>
             </div>
-            {/* Forms for Add Money and Add Expenditure */}
-            <div className="forms-container">
-                <div className="form-add-money">
-                    <h2>Add Money</h2>
-                    <form onSubmit={handleAddMoney}>
-                        <div className="form-group">
-                            <label>Amount</label>
-                            <input
-                                type="number"
-                                value={addMoney}
-                                onChange={(e) => setAddMoney(e.target.value)}
-                                placeholder="Enter amount"
-                            />
-                        </div>
-                        <button type="submit" className="submit-button">
-                            Add Money
-                        </button>
-                    </form>
-                </div>
-
-                <div className="form add-transaction">
+            <div className="form-add-money">
+                <h2>Add Money</h2>
+                <form onSubmit={handleAddMoney}>
+                    <div className="form-group">
+                        <label>Amount</label>
+                        <input type="number" placeholder="Enter amount" />
+                    </div>
+                    <button type="submit" className="submit-button">
+                        Add Money
+                    </button>
+                </form>
+            </div>
+            <div className="form-data">
+                <div className="form-add-transaction">
                     <h2>Add Expenditure</h2>
                     <form onSubmit={handleAddExpenditure}>
                         <div className="form-group">
                             <label>Purpose</label>
-                            <input
-                                type="text"
-                                value={formData.purpose}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, purpose: e.target.value })
-                                }
-                                placeholder="Enter purpose"
-                            />
+                            <input type="text" placeholder="Enter purpose" />
                         </div>
                         <div className="form-group">
                             <label>Sum</label>
-                            <input
-                                type="number"
-                                value={formData.sum}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, sum: e.target.value })
-                                }
-                                placeholder="Enter sum"
-                            />
+                            <input type="number" placeholder="Enter sum" />
                         </div>
                         <div className="form-group">
                             <label>Date</label>
-                            <input
-                                type="date"
-                                value={formData.date}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, date: e.target.value })
-                                }
-                            />
+                            <input type="date" />
                         </div>
                         <div className="form-group categories">
                             <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    value="shopping"
-                                    checked={formData.category === "shopping"}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, category: e.target.value })
-                                    }
-                                />
+                                <input type="radio" name="category" value="shopping" />
                                 Shopping
                             </label>
                             <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    value="foodAndDrinks"
-                                    checked={formData.category === "foodAndDrinks"}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, category: e.target.value })
-                                    }
-                                />
+                                <input type="radio" name="category" value="foodAndDrinks" />
                                 Food & Drinks
                             </label>
                             <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    value="billsAndUtilities"
-                                    checked={formData.category === "billsAndUtilities"}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, category: e.target.value })
-                                    }
-                                />
+                                <input type="radio" name="category" value="billsAndUtilities" />
                                 Bills & Utilities
                             </label>
                             <label>
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    value="others"
-                                    checked={formData.category === "others"}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, category: e.target.value })
-                                    }
-                                />
+                                <input type="radio" name="category" value="others" />
                                 Others
                             </label>
                         </div>
@@ -263,4 +212,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default Home;

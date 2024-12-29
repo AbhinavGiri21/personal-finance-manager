@@ -23,7 +23,21 @@ const storage = multer.diskStorage({
         cb(null, `${Date.now()}-${file.originalname}`);
     },
 });
-const upload = multer({ storage });
+
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, and JPG are allowed.'), false);
+    }
+};
+
+const upload = multer({
+    storage,
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
+});
 
 // Create an Express app
 const app = express();
@@ -31,7 +45,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(cors());
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // MongoDB connection
 if (!process.env.JWT_SECRET_KEY || !process.env.MONGO_URI) {
     console.error("Environment variables JWT_SECRET_KEY and MONGO_URI are required.");
@@ -48,33 +62,27 @@ mongoose.connect(process.env.MONGO_URI, {
 });
 
 // User model
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     profilePic: { type: String },
+    amountRemaining: { type: Number, default: 0 },
+    amountShopping: { type: Number, default: 0 },
+    amountFD: { type: Number, default: 0 },
+    amountBills: { type: Number, default: 0 },
+    amountOther: { type: Number, default: 0 },
+    transactions: [
+        {
+            purpose: { type: String, required: true },
+            sum: { type: Number, required: true },
+            date: { type: Date, required: true },
+            category: { type: String, required: true },
+            transactionType: { type: String, required: true },
+        },
+    ],
 });
-const User = mongoose.model("User", UserSchema);
-
-// Expense model
-const ExpenseSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    balance: { type: Number, default: 0 },
-    shopping: { type: Number, default: 0 },
-    food: { type: Number, default: 0 },
-    entertainment: { type: Number, default: 0 },
-});
-const Expense = mongoose.model("Expense", ExpenseSchema);
-
-// Transaction model
-const TransactionSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    purpose: { type: String, required: true },
-    sum: { type: Number, required: true },
-    category: { type: String, required: true },
-    date: { type: Date, required: true },
-});
-const Transaction = mongoose.model("Transaction", TransactionSchema);
+const User = mongoose.model("User", userSchema);
 
 // Authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -85,7 +93,7 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
         if (err) {
-            return res.status(401).json({ message: "Invalid or expired token" });
+            return res.status(401).json({ message: "Invalid or expired token", error: err.message });
         }
 
         req.user = decoded;
@@ -141,6 +149,7 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
+// User data and transactions
 app.get("/get-username", authenticateToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
@@ -148,6 +157,108 @@ app.get("/get-username", authenticateToken, async (req, res) => {
         res.json({ username: user.username, profilePic: user.profilePic });
     } catch (err) {
         res.status(500).json({ error: "Invalid token!" });
+    }
+});
+
+app.get("/api/user-data", authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId, {
+            amountRemaining: 1,
+            amountShopping: 1,
+            amountFD: 1,
+            amountBills: 1,
+            amountOther: 1,
+            transactions: 1,
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(user);
+    } catch (err) {
+        console.error("Error fetching user data:", err);
+        res.status(500).json({ message: "An error occurred" });
+    }
+});
+
+// Add money endpoint
+app.post("/api/add-money", authenticateToken, async (req, res) => {
+    try {
+        const { amount } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        // Update user data
+        user.amountRemaining += amount;
+
+        // Save the transaction
+        user.transactions.push({
+            purpose: "Add Money",
+            category: "Amount Added",
+            sum: amount,
+            date: new Date(),
+            transactionType: "addMoney",
+        });
+
+        await user.save();
+
+        res.json({ amountRemaining: user.amountRemaining });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "An error occurred while adding money." });
+    }
+});
+
+// Add expenditure endpoint
+app.post("/api/add-expenditure", authenticateToken, async (req, res) => {
+    try {
+        const { purpose, sum, date, category } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        // Deduct amount from the appropriate category
+        if (category === "shopping") user.amountShopping += sum;
+        if (category === "foodAndDrinks") user.amountFD += sum;
+        if (category === "billsAndUtilities") user.amountBills += sum;
+        if (category === "others") user.amountOther += sum;
+
+        // Update remaining balance
+        user.amountRemaining -= sum;
+
+        // Save the transaction
+        user.transactions.push({
+            purpose,
+            category,
+            sum,
+            date,
+            transactionType: "expenditure",
+        });
+
+        await user.save();
+
+        res.json({ amountRemaining: user.amountRemaining });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "An error occurred while adding expenditure." });
+    }
+});
+
+// Upload profile picture
+app.post("/api/upload-profile-pic", authenticateToken, upload.single("profilePic"), async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Save the file path in the database
+        user.profilePic = req.file.path; // Save file path to database
+        await user.save();
+
+        // Send the URL or path of the uploaded file
+        res.status(200).json({ message: "Profile picture updated", profilePic: req.file.path });
+    } catch (err) {
+        console.error("Error uploading profile picture:", err);
+        res.status(500).json({ message: "An error occurred" });
     }
 });
 

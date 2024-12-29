@@ -3,7 +3,8 @@
     flex-wrap: wrap;
     gap: 20px;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    /* Align items to the start */
     margin: 20px;
     margin-left: 30px;
 }
@@ -54,115 +55,14 @@
     width: 150px;
 }
 
-.transactions-table {
+.forms-container {
+    display: flex;
+    flex-direction: column;
+    /* Stack forms vertically */
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.transactions-table th,
-.transactions-table td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
-
-.transactions-table th {
-    background-color: #f4f4f4;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-.transactions-table td.positive {
-    color: green;
-}
-
-.transactions-table td.negative {
-    color: red;
-}
-
-.category {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    color: white;
-    font-weight: bold;
-    display: inline-block;
-}
-
-.category.revenue {
-    background-color: green;
-}
-
-.category.food {
-    background-color: orange;
-}
-
-.category.bills {
-    background-color: red;
-}
-
-.category.others {
-    background-color: yellow;
-    color: black;
-}
-
-.transaction-details {
-    width: 90%;
+    gap: 30px;
     margin-top: 20px;
-}
-
-.transaction-details h2 {
-    margin-bottom: 10px;
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-/* General Form Styles */
-.add-transaction {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.add-transaction h2 {
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-    color: #333;
-}
-
-/* Form Group Styles */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 5px;
-}
-
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group input[type="date"] {
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input[type="text"]:focus,
-.form-group input[type="number"]:focus,
-.form-group input[type="date"]:focus {
-    border-color: #4caf50;
-    outline: none;
+    /* Add spacing between cards and forms */
 }
 
 /* Radio Buttons and Categories */
@@ -188,6 +88,12 @@
     padding: 20px;
 }
 
+.form-add-transaction {
+    background-color: rgb(249, 249, 249);
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+    padding: 20px;
+}
+
 /* Submit Button */
 .submit-button {
     background-color: rgba(20, 147, 197, 0.849);
@@ -204,30 +110,40 @@
     background-color: rgba(14, 114, 154, 0.849);
 }
 
-.forms-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 50px;
-    flex-wrap: wrap;
-    padding-bottom: 30px;
+.transaction-table table {
+    width: 90%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border: 1px solid #ddd;
+    margin-left: auto;
+}
+
+.transaction-table th,
+.transaction-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    word-wrap: break-word;
+}
+
+.transaction-table th {
+    background-color: #f4f4f4;
+}
+
+.transaction-table tr:hover {
+    background-color: #f1f1f1;
+}
+
+.transaction-table h2 {
+    text-align: center;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .add-transaction {
-        padding: 15px;
-    }
-
     .categories {
-        flex-direction: column;
         gap: 10px;
     }
-}
 
-
-@media (max-width: 768px) {
     .card {
         width: 100%;
         max-width: 200px;
@@ -235,16 +151,9 @@
 
     .content {
         margin-top: 80px;
-        flex-direction: column;
     }
 
-    .transactions-table th,
-    .transactions-table td {
-        font-size: 14px;
-        padding: 8px;
-    }
-
-    .transaction-details h2 {
-        font-size: 20px;
+    .forms-container {
+        gap: 20px;
     }
 }

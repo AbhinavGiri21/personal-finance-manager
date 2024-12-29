@@ -75,7 +75,7 @@ const Panel = () => {
         try {
             setLoading(true);
             const response = await axios.post(
-                "http://localhost:5000/upload-profile-pic",
+                "http://localhost:5000/api/upload-profile-pic",  // Make sure the URL matches the backend route
                 formData,
                 {
                     headers: {
@@ -84,7 +84,7 @@ const Panel = () => {
                     },
                 }
             );
-            setProfilePic(response.data.filePath);
+            setProfilePic(response.data.profilePic); // Update profile picture
             alert("Profile picture updated successfully");
             setShowModal(false);
         } catch (error) {
@@ -94,6 +94,7 @@ const Panel = () => {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         fetchUserDetails();
