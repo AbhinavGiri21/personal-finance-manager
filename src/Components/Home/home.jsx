@@ -101,7 +101,7 @@ const Home = () => {
     return (
         <div className="content">
             <div className="card green balance">
-                <h3>Balance</h3>
+                <h3>Remaining Balance</h3>
                 <p>₹{userData.amountRemaining}</p>
             </div>
             <div className="card blue">
